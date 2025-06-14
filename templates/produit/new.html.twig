@@ -1,8 +1,11 @@
-{# templates/produit/new.html.twig #}
+{% extends 'base.html.twig' %}
 
-<h1>Ajouter un nouveau produit</h1>
+{% block title %}New Produit{% endblock %}
 
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button type="submit">Créer</button>
-{{ form_end(form) }}
+{% block body %}
+    <h1>Create new Produit</h1>
+
+    {{ include('produit/_form.html.twig') }}
+
+    <a href="{{ path('app_produit_index') }}">back to list</a>
+{% endblock %}
