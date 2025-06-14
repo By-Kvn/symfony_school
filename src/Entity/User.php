@@ -2,13 +2,16 @@
 
 namespace App\Entity;
 
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\NotificationManager;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -48,9 +51,12 @@ class User
     #[ORM\OneToMany(targetEntity: Notification::class, mappedBy: 'user')]
     private Collection $notifications;
 
+    // private ?NotificationManager $notificationManager = null;
+
     public function __construct()
     {
         $this->notifications = new ArrayCollection();
+        // $this->notificationManager = new NotificationManager($this);
     }
 
     public function getId(): ?int
@@ -174,25 +180,19 @@ class User
         return $this->notifications;
     }
 
-    public function addNotification(Notification $notification): static
-    {
-        if (!$this->notifications->contains($notification)) {
-            $this->notifications->add($notification);
-            $notification->setUser($this);
-        }
+    // public function getNotificationManager(): NotificationManager
+    // {
+    //     return $this->notificationManager;
+    // }
 
-        return $this;
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 
-    public function removeNotification(Notification $notification): static
+    public function getUserIdentifier(): string
     {
-        if ($this->notifications->removeElement($notification)) {
-            // set the owning side to null (unless already changed)
-            if ($notification->getUser() === $this) {
-                $notification->setUser(null);
-            }
-        }
-
-        return $this;
+        return (string) $this->email;
     }
 }

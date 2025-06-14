@@ -43,4 +43,20 @@
     <a href="{{ path('app_produit_edit', {'id': produit.id}) }}">edit</a>
 
     {{ include('produit/_delete_form.html.twig') }}
+<pre>
+    app.user = {{ app.user ? 'connecté' : 'non connecté' }}
+    actif = {{ app.user ? (app.user.actif ? 'actif' : 'inactif') : 'n/a' }}
+</pre>
+
+    {% if app.user and app.user.actif %}
+    <form method="post" action="{{ path('app_produit_acheter', {id: produit.id}) }}" onsubmit="return confirm('Confirmer l\'achat ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('achat' ~ produit.id) }}">
+        <button class="btn btn-success mt-3">Acheter pour {{ produit.prix }} points</button>
+    </form>
+{% else %}
+    <div class="alert alert-warning mt-3">
+        Vous devez être connecté et actif pour acheter ce produit.
+    </div>
+{% endif %}
+
 {% endblock %}

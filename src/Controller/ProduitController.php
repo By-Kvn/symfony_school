@@ -9,7 +9,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Notification;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Routing\Annotation\Route;
+
 
 #[Route('/produit')]
 final class ProduitController extends AbstractController
@@ -78,4 +82,51 @@ final class ProduitController extends AbstractController
 
         return $this->redirectToRoute('app_produit_index', [], Response::HTTP_SEE_OTHER);
     }
+
+    #[IsGranted('ROLE_USER')]
+#[Route('/produit/{id}/acheter', name: 'app_produit_acheter', methods: ['POST'])]
+public function acheter(Produit $produit, EntityManagerInterface $em): RedirectResponse
+{
+    $user = $this->getUser();
+
+    // Vérifie que l'utilisateur est bien une instance de votre entité User
+    if (!$user instanceof \App\Entity\User) {
+        $this->addFlash('danger', 'Utilisateur non valide.');
+        return $this->redirectToRoute('app_produit_show', ['id' => $produit->getId()]);
+    }
+
+    // ⚠️ Vérifie que l'utilisateur est actif
+    if (!$user->isActif()) {
+        $this->addFlash('danger', 'Votre compte est désactivé. Vous ne pouvez pas effectuer d\'achat.');
+        return $this->redirectToRoute('app_produit_show', ['id' => $produit->getId()]);
+    }
+
+    // 💰 Vérifie que le user a assez de points
+    if ($user->getPoints() < $produit->getPrix()) {
+        $this->addFlash('danger', 'Vous n\'avez pas assez de points pour acheter ce produit.');
+        return $this->redirectToRoute('app_produit_show', ['id' => $produit->getId()]);
+    }
+
+    // 🔄 Soustrait les points
+    $user->setPoints($user->getPoints() - $produit->getPrix());
+
+    // 🛎️ Crée la notification
+    $notification = new Notification();
+    $notification->setUser($user);
+    $notification->setLabel(sprintf(
+        'Achat : %s a acheté %s pour %d points le %s',
+        $user->getNom(),
+        $produit->getNom(),
+        $produit->getPrix(),
+        (new \DateTime())->format('d/m/Y H:i')
+    ));
+
+    $em->persist($notification);
+    $em->flush();
+
+    $this->addFlash('success', 'Achat effectué avec succès !');
+
+    return $this->redirectToRoute('app_produit_index');
+}
+
 }
