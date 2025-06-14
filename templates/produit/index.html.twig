@@ -3,7 +3,18 @@
 {% block title %}Produit index{% endblock %}
 
 {% block body %}
-    <h1>Produit index</h1>
+{% if user %}
+    <p>Bonjour {{ user.prenom ~ ' ' ~ user.nom }} ({{ user.email }})</p>
+    <p>Rôles :
+    {% for role in user.roles %}
+        <span class="badge bg-info text-dark">{{ role }}</span>
+    {% endfor %}
+</p>
+
+{% else %}
+    <p>Utilisateur non connecté</p>
+{% endif %}
+    <h1>Liste des produits</h1>
 
     <table class="table">
         <thead>
