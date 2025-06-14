@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Produits{% endblock %}
+
+{% block body %}
+<h1>Liste des Produits</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Prix</th>
+            <th>Catégorie</th>
+            <th>Description</th>
+            <th>Créé le</th>
+            <th>Mis à jour le</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for produit in produits %}
+        <tr>
+            <td>{{ produit.nom }}</td>
+            <td>{{ produit.prix }} €</td>
+            <td>{{ produit.category }}</td>
+            <td>{{ produit.description }}</td>
+            <td>{{ produit.createdAt ? produit.createdAt|date('d/m/Y H:i') : '' }}</td>
+            <td>{{ produit.updatedAt ? produit.updatedAt|date('d/m/Y H:i') : '' }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6">Aucun produit trouvé.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ path('produit_new') }}">Ajouter un nouveau produit</a>
+{% endblock %}
