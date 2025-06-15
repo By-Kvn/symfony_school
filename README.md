@@ -32,10 +32,4 @@ Connectez-vous via `/login`.
 
 ---
 
-## ⚙️ Installation
-
-### 1. Cloner le projet
-
-```bash
-git clone <url-du-repo>
-cd nom-du-repo
+enjoy ! 
