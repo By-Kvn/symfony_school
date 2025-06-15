@@ -30,6 +30,11 @@ Ce projet est une application web développée avec **Symfony 6**, permettant :
 
 Connectez-vous via `/login`.
 
+🧑‍🏫 Compte desactiver pour l'évaluation :
+
+- **Email :** `no@no.fr`
+- **Mot de passe :** `root`
+
 ---
 
 enjoy ! 

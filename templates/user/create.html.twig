@@ -3,14 +3,44 @@
 {% block title %}Créer un utilisateur{% endblock %}
 
 {% block body %}
-<h1>Créer un utilisateur</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4 text-center">Créer un utilisateur</h1>
 
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn btn-primary">Créer</button>
-{{ form_end(form) }}
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
 
-{% for message in app.flashes('success') %}
-    <div class="alert alert-success">{{ message }}</div>
-{% endfor %}
+            <div class="card shadow-sm p-4 rounded">
+                {{ form_start(form) }}
+                    <div class="mb-3">
+                        {{ form_row(form.nom) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.prenom) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.email) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.plainPassword) }}
+                    </div>
+                    {# <div class="mb-3">
+                        {{ form_row(form.roles) }}
+                    </div> #}
+                    {# <div class="mb-3">
+                        {{ form_row(form.isActive) }}
+                    </div> #}
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-success">Créer</button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

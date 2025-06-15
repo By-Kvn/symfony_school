@@ -1,65 +1,455 @@
-<a href="{{ path('app_produit_index') }}" class="btn btn-secondary mb-3">
-    ← Retour à la liste des produits
-</a>
-<h1>Tableau de bord Admin</h1>
+{% extends 'base.html.twig' %}
 
-{# Formulaire pour ajouter les points à tous les utilisateurs actifs #}
-<form action="{{ path('app_admin_ajouter_points') }}" method="post" onsubmit="return confirm('Ajouter 1000 points à tous les utilisateurs actifs ?')">
-    <button type="submit">Ajouter 1000 points à tous les users actifs</button>
-</form>
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset et base */
+        .admin-dashboard {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-{% for message in app.flashes('success') %}
-    <div class="alert alert-success">{{ message }}</div>
-{% endfor %}
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
 
-{% for message in app.flashes('error') %}
-    <div class="alert alert-danger">{{ message }}</div>
-{% endfor %}
+        /* Bouton retour moderne */
+        .btn-back-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: white !important;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Roles</th>
-            <th>Points</th>
-            <th>Actions</th>
-            <th>Actif</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for user in users %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.roles|join(', ') }}</td>
-            <td>{{ user.points }}</td>
-            <td>
-                {# Bouton pour ajouter des points #}
-                <form action="{{ path('app_admin_ajouter_points_user', {'id': user.id}) }}" method="post" style="display:inline-block;">
-                    <button type="submit" class="btn btn-primary btn-sm">Ajouter 1000 points</button>
-                </form>
+        .btn-back-modern:hover {
+            background: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            color: white !important;
+            text-decoration: none;
+        }
 
-                {# Bouton pour activer/désactiver l'utilisateur #}
-                <form action="{{ path('admin_user_toggle_actif', {'id': user.id}) }}" method="post" style="display:inline-block;">
-                    <input type="hidden" name="_token" value="{{ csrf_token('toggle_actif' ~ user.id) }}">
-                    <button type="submit" class="btn btn-warning btn-sm">
-                        {{ user.actif ? 'Désactiver' : 'Activer' }}
-                    </button>
-                </form>
+        /* Titre principal avec gradient */
+        .admin-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
 
-                {# Bouton pour supprimer l'utilisateur #}
-                <form action="{{ path('app_admin_supprimer_user', {'id': user.id}) }}" method="post" style="display:inline-block;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
-                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                </form>
-            </td>
-            <td>{{ user.actif ? 'Oui' : 'Non' }}</td>
-        </tr>
-    {% else %}
-        <tr>
-            <td colspan="6">Aucun utilisateur trouvé.</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        /* Section actions globales */
+        .global-actions-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .global-actions-section h2 {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .global-actions-section h2:before {
+            content: '🚀';
+            font-size: 1.5rem;
+        }
+
+        .btn-global-action {
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            color: white !important;
+            border: none !important;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-global-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-global-action:before {
+            content: '💎 ';
+            margin-right: 8px;
+        }
+
+        /* Alerts modernes */
+        .alert-modern {
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+
+        .alert-success.alert-modern {
+            background: rgba(76, 217, 100, 0.2) !important;
+            color: #4cd364 !important;
+            border-color: rgba(76, 217, 100, 0.3) !important;
+        }
+
+        .alert-success.alert-modern:before {
+            content: '✅ ';
+            margin-right: 8px;
+        }
+
+        .alert-danger.alert-modern {
+            background: rgba(255, 107, 107, 0.2) !important;
+            color: #ff6b6b !important;
+            border-color: rgba(255, 107, 107, 0.3) !important;
+        }
+
+        .alert-danger.alert-modern:before {
+            content: '❌ ';
+            margin-right: 8px;
+        }
+
+        /* Table moderne avec glassmorphism */
+        .table-modern-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-x: auto;
+        }
+
+        .table-modern {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 15px;
+            background: transparent !important;
+        }
+
+        .table-modern thead th {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            padding: 20px 15px;
+            border: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .table-modern thead th:first-child {
+            border-radius: 15px 0 0 15px;
+        }
+
+        .table-modern thead th:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        .table-modern tbody tr {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border-radius: 15px;
+        }
+
+        .table-modern tbody tr:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-modern tbody td {
+            padding: 20px 15px;
+            border: none;
+            color: black;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .table-modern tbody td:first-child {
+            border-radius: 15px 0 0 15px;
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+
+        .table-modern tbody td:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        /* Badges et statuts */
+        .points-display {
+            background: linear-gradient(135deg, #feca57, #ff6b6b);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: rgba(76, 217, 100, 0.2);
+            color: #4cd364;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid rgba(76, 217, 100, 0.3);
+        }
+
+        .status-active:before {
+            content: '✅ ';
+            margin-right: 5px;
+        }
+
+        .status-inactive {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .status-inactive:before {
+            content: '❌ ';
+            margin-right: 5px;
+        }
+
+        .roles-display {
+            color: #4ecdc4;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Boutons d'action modernes */
+        .actions-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action-modern {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .btn-points-modern {
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1) !important;
+            color: white !important;
+        }
+
+        .btn-points-modern:before {
+            content: '💎 ';
+            margin-right: 4px;
+        }
+
+        .btn-points-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-toggle-modern {
+            background: linear-gradient(135deg, #feca57, #ff9ff3) !important;
+            color: white !important;
+        }
+
+        .btn-toggle-modern:before {
+            content: '🔄 ';
+            margin-right: 4px;
+        }
+
+        .btn-toggle-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(254, 202, 87, 0.4);
+        }
+
+        .btn-delete-modern {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f) !important;
+            color: white !important;
+        }
+
+        .btn-delete-modern:before {
+            content: '🗑️ ';
+            margin-right: 4px;
+        }
+
+        .btn-delete-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Empty state */
+        .empty-state-modern {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-state-modern:before {
+            content: '👥';
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .empty-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-title {
+                font-size: 2rem;
+            }
+            
+            .table-modern-container {
+                padding: 20px;
+            }
+            
+            .actions-container {
+                flex-direction: column;
+            }
+            
+            .btn-action-modern {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-dashboard">
+    <div class="admin-container">
+        <a href="{{ path('app_produit_index') }}" class="btn btn-secondary mb-3 btn-back-modern">
+            ← Retour à la liste des produits
+        </a>
+        
+        <h1 class="admin-title">📊 Tableau de bord Admin</h1>
+
+        {# Formulaire pour ajouter les points à tous les utilisateurs actifs #}
+        <div class="global-actions-section">
+            <h2>Actions Globales</h2>
+            <form action="{{ path('app_admin_ajouter_points') }}" method="post" onsubmit="return confirm('Ajouter 1000 points à tous les utilisateurs actifs ?')">
+                <button type="submit" class="btn-global-action">Ajouter 1000 points à tous les users actifs</button>
+            </form>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-modern">{{ message }}</div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-modern">{{ message }}</div>
+        {% endfor %}
+
+        <div class="table-modern-container">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Points</th>
+                        <th>Actions</th>
+                        <th>Actif</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><span class="roles-display">{{ user.roles|join(', ') }}</span></td>
+                        <td><span class="points-display">{{ user.points }} pts</span></td>
+                        <td>
+                            <div class="actions-container">
+                                {# Bouton pour ajouter des points #}
+                                <form action="{{ path('app_admin_ajouter_points_user', {'id': user.id}) }}" method="post" style="display:inline-block;">
+                                    <button type="submit" class="btn btn-primary btn-sm btn-action-modern btn-points-modern">+1000</button>
+                                </form>
+
+                                {# Bouton pour activer/désactiver l'utilisateur #}
+                                <form action="{{ path('admin_user_toggle_actif', {'id': user.id}) }}" method="post" style="display:inline-block;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('toggle_actif' ~ user.id) }}">
+                                    <button type="submit" class="btn btn-warning btn-sm btn-action-modern btn-toggle-modern">
+                                        {{ user.actif ? 'Désactiver' : 'Activer' }}
+                                    </button>
+                                </form>
+
+                                {# Bouton pour supprimer l'utilisateur #}
+                                <form action="{{ path('app_admin_supprimer_user', {'id': user.id}) }}" method="post" style="display:inline-block;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                    <button type="submit" class="btn btn-danger btn-sm btn-action-modern btn-delete-modern">Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="{{ user.actif ? 'status-active' : 'status-inactive' }}">
+                                {{ user.actif ? 'Actif' : 'Inactif' }}
+                            </span>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state-modern">
+                                <h2 class="empty-title">Aucun utilisateur trouvé</h2>
+                                <p class="empty-subtitle">Commencez par ajouter des utilisateurs à votre plateforme</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

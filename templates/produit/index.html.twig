@@ -3,114 +3,754 @@
 {% block title %}Gestion des Produits{% endblock %}
 
 {% block body %}
-<div class="container my-5">
-
-    {% if user %}
-        <div class="alert alert-light border shadow-sm p-4 mb-4">
-            <h5 class="mb-2">Bonjour <strong>{{ user.prenom ~ ' ' ~ user.nom }}</strong></h5>
-            <p class="mb-1 text-muted">Email : {{ user.email }}</p>
-            <p class="mb-2">
-                Rôles :
-                {% for role in user.roles %}
-                    <span class="badge bg-info text-dark">{{ role }}</span>
-                {% endfor %}
-            </p>
-            <p>Points :
-                {% if user.points is not null %}
-                    <span class="badge bg-success">{{ user.points }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">Non défini</span>
-                {% endif %}
-            </p>
-
-            {% if is_granted('ROLE_ADMIN') %}
-                <div class="mt-3">
-                    <a href="{{ path('app_admin_dashboard') }}" class="btn btn-dark me-2">🎯 Tableau de bord admin</a>
-                    <a href="{{ path('admin_notifications_index') }}" class="btn btn-outline-primary me-2">🔔 Notifications</a>
+<div class="modern-container">
+    <!-- Header avec gradient animé -->
+    <div class="hero-section">
+        <div class="gradient-bg"></div>
+        <div class="container position-relative">
+            {% if user %}
+                <div class="glass-card user-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="user-info">
+                            <div class="avatar-wrapper">
+                                <div class="avatar">{{ user.prenom|first|upper }}{{ user.nom|first|upper }}</div>
+                                <div class="status-dot"></div>
+                            </div>
+                            <div class="user-details">
+                                <h4 class="user-name">{{ user.prenom ~ ' ' ~ user.nom }}</h4>
+                                <p class="user-email">{{ user.email }}</p>
+                                <div class="user-roles">
+                                    {% for role in user.roles %}
+                                        <span class="role-badge">{{ role|replace({'ROLE_': ''}) }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-stats">
+                            <div class="points-card">
+                                {% if user.points is not null %}
+                                    <div class="points-value">{{ user.points }}</div>
+                                    <div class="points-label">Points</div>
+                                {% else %}
+                                    <div class="points-value">--</div>
+                                    <div class="points-label">Non défini</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('app_admin_dashboard') }}" class="modern-btn btn-admin">
+                                    <i class="icon">🎯</i> Dashboard
+                                </a>
+                                <a href="{{ path('admin_notifications_index') }}" class="modern-btn btn-notify">
+                                    <i class="icon">🔔</i> Notifications
+                                </a>
+                            {% endif %}
+                            <form method="post" action="{{ path('app_logout') }}" class="d-inline">
+                                <button type="submit" class="modern-btn btn-logout">
+                                    <i class="icon">↗</i> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="glass-card login-prompt">
+                    <div class="text-center">
+                        <div class="login-icon">👤</div>
+                        <h4>Connexion requise</h4>
+                        <p>Connectez-vous pour accéder aux produits</p>
+                        <div class="login-actions">
+                            <a href="{{ path('app_login') }}" class="modern-btn btn-primary">Se connecter</a>
+                            <a href="{{ path('user_create') }}" class="modern-btn btn-success">Créer un compte</a>
+                        </div>
+                    </div>
                 </div>
             {% endif %}
-
-            <form method="post" action="{{ path('app_logout') }}" class="d-inline mt-2">
-                <button type="submit" class="btn btn-outline-secondary mt-2">Se déconnecter</button>
-            </form>
         </div>
-    {% else %}
-        <div class="alert alert-warning">
-            Utilisateur non connecté
-            <div class="mt-2">
-                <a href="{{ path('app_login') }}" class="btn btn-primary me-2">Se connecter</a>
-                <a href="{{ path('user_create') }}" class="btn btn-success">Créer un compte</a>
+    </div>
+
+    <!-- Titre et contrôles -->
+    <div class="container py-5">
+        <div class="section-header">
+            <div class="title-wrapper">
+                <h1 class="page-title">{{ 'produit.titre'|trans }}</h1>
+                <div class="title-accent"></div>
             </div>
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('app_produit_new') }}" class="modern-btn btn-add">
+                    <span class="btn-icon">+</span>
+                    Nouveau Produit
+                </a>
+            {% endif %}
         </div>
-    {% endif %}
 
-    <h1 class="mb-4">{{ 'produit.titre'|trans }}</h1>
+        {% if app.user and not app.user.actif %}
+            <div class="warning-card">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-content">
+                    <h5>Compte désactivé</h5>
+                    <p>Votre compte est temporairement désactivé. Contactez un administrateur.</p>
+                </div>
+            </div>
+        {% endif %}
 
-    {% if app.user and not app.user.actif %}
-        <div class="alert alert-warning">
-            ⚠️ Votre compte est désactivé. Vous ne pouvez pas acheter de produits.
-        </div>
-    {% endif %}
+        <!-- Grille de produits moderne -->
+        <div class="products-section">
+            {% if produits %}
+                <div class="products-grid">
+                    {% for produit in produits %}
+                        <div class="product-card">
+                            <div class="product-header">
+                                <div class="product-id">#{{ produit.id }}</div>
+                                <div class="product-category">{{ produit.category }}</div>
+                            </div>
+                            
+                            <div class="product-content">
+                                <h3 class="product-name">{{ produit.nom }}</h3>
+                                <p class="product-description">{{ produit.description|length > 80 ? produit.description|slice(0, 80) ~ '...' : produit.description }}</p>
+                                
+                                <div class="product-meta">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Créé</span>
+                                        <span class="meta-value">{{ produit.createdAt ? produit.createdAt|date('d/m/Y') : '--' }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Modifié</span>
+                                        <span class="meta-value">{{ produit.updatedAt ? produit.updatedAt|date('d/m/Y') : '--' }}</span>
+                                    </div>
+                                </div>
+                            </div>
 
-    <table class="table table-striped table-bordered shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Nom</th>
-                <th>Prix</th>
-                <th>Catégorie</th>
-                <th>Description</th>
-                <th>Créé le</th>
-                <th>Mis à jour</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for produit in produits %}
-            <tr>
-                <td>{{ produit.id }}</td>
-                <td>{{ produit.nom }}</td>
-                <td>{{ produit.prix }}</td>
-                <td>{{ produit.category }}</td>
-                <td>{{ produit.description }}</td>
-                <td>{{ produit.createdAt ? produit.createdAt|date('d/m/Y H:i') : '' }}</td>
-                <td>{{ produit.updatedAt ? produit.updatedAt|date('d/m/Y H:i') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_produit_show', {'id': produit.id}) }}" class="btn btn-sm btn-outline-info">Voir</a>
-
+                            <div class="product-footer">
+                                <div class="product-price">
+                                    <span class="price-value">{{ produit.prix }}</span>
+                                    <span class="price-unit">pts</span>
+                                </div>
+                                
+                                <div class="product-actions">
+                                    <a href="{{ path('app_produit_show', {'id': produit.id}) }}" class="action-btn btn-view" title="Voir">
+                                        👁
+                                    </a>
+                                    
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}" class="action-btn btn-edit" title="Modifier">
+                                            ✏️
+                                        </a>
+                                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.id}) }}" 
+                                              class="d-inline"
+                                              onsubmit="return confirm('Supprimer ce produit ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.id) }}">
+                                            <button type="submit" class="action-btn btn-delete" title="Supprimer">🗑️</button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                    {% if is_granted('ROLE_USER') %}
+                                        {% if user and user.points >= produit.prix %}
+                                            <form method="post" action="{{ path('app_produit_acheter', {'id': produit.id}) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('acheter' ~ produit.id) }}">
+                                                <button type="submit" class="action-btn btn-buy" title="Acheter">💳</button>
+                                            </form>
+                                        {% else %}
+                                            <button class="action-btn btn-disabled" disabled title="Points insuffisants">❌</button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h3>Aucun produit disponible</h3>
+                    <p>Il n'y a actuellement aucun produit dans le catalogue</p>
                     {% if is_granted('ROLE_ADMIN') %}
-                        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}" class="btn btn-sm btn-outline-warning">Modifier</a>
-
-                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.id}) }}"
-                              style="display:inline-block;"
-                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.id) }}">
-                            <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                        </form>
+                        <a href="{{ path('app_produit_new') }}" class="modern-btn btn-primary">
+                            Ajouter le premier produit
+                        </a>
                     {% endif %}
-
-                    {% if is_granted('ROLE_USER') %}
-                        {% if user and user.points >= produit.prix %}
-                            <form method="post" action="{{ path('app_produit_acheter', {'id': produit.id}) }}" style="display:inline-block;">
-                                <input type="hidden" name="_token" value="{{ csrf_token('acheter' ~ produit.id) }}">
-                                <button type="submit" class="btn btn-sm btn-success">Acheter</button>
-                            </form>
-                        {% else %}
-                            <button class="btn btn-sm btn-secondary" disabled>Pas assez de points</button>
-                        {% endif %}
-                    {% endif %}
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8" class="text-center">Aucun produit trouvé</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    {% if is_granted('ROLE_ADMIN') %}
-        <a href="{{ path('app_produit_new') }}" class="btn btn-success mt-4">➕ Ajouter un produit</a>
-    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #f43f5e;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --dark: #1f2937;
+    --light: #f8fafc;
+    --glass: rgba(255, 255, 255, 0.1);
+    --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    {# background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); #}
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark);
+}
+
+.modern-container {
+    min-height: 100vh;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    padding: 2rem 0;
+    overflow: hidden;
+}
+
+.gradient-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient);
+    opacity: 0.1;
+    animation: gradientShift 10s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { transform: translateX(0%); }
+    50% { transform: translateX(5%); }
+}
+
+/* Glass Cards */
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.3);
+}
+
+/* User Card */
+.user-card {
+    margin-bottom: 2rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-wrapper {
+    position: relative;
+}
+
+.avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    box-shadow: var(--shadow);
+}
+
+.status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: var(--success);
+    border: 3px solid white;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.user-name {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.user-email {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.user-roles {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.role-badge {
+    background: var(--gradient-alt);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.points-card {
+    text-align: center;
+    background: var(--gradient);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    min-width: 120px;
+}
+
+.points-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.points-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Modern Buttons */
+.modern-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.modern-btn:hover::before {
+    left: 100%;
+}
+
+.btn-admin {
+    background: var(--dark);
+    color: white;
+}
+
+.btn-notify {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-logout {
+    background: #e2e8f0;
+    color: var(--dark);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-add {
+    background: var(--gradient);
+    color: white;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+    border-radius: 16px;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    font-size: 1.2rem;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 3rem;
+    gap: 2rem;
+}
+
+.title-wrapper {
+    position: relative;
+}
+
+.page-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-accent {
+    height: 4px;
+    width: 60px;
+    background: var(--gradient);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+}
+
+/* Warning Card */
+.warning-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.warning-icon {
+    font-size: 2rem;
+}
+
+.warning-content h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--warning);
+    font-weight: 700;
+}
+
+.warning-content p {
+    margin: 0;
+    color: #92400e;
+}
+
+/* Products Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.product-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.product-id {
+    font-family: 'Courier', monospace;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.9rem;
+}
+
+.product-category {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.product-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    color: var(--dark);
+}
+
+.product-description {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.product-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.meta-item {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.meta-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.meta-value {
+    display: block;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.product-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+
+.price-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.price-unit {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.btn-view {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+}
+
+.btn-edit {
+    background: rgba(251, 191, 36, 0.1);
+    color: var(--warning);
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.btn-buy {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.btn-disabled {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.action-btn:hover:not(.btn-disabled) {
+    transform: scale(1.1);
+    box-shadow: var(--shadow);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+/* Login Prompt */
+.login-prompt {
+    text-align: center;
+}
+
+.login-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.login-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-card .d-flex {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .login-actions {
+        flex-direction: column;
+    }
+    
+    .user-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .glass-card {
+        padding: 1rem;
+        border-radius: 16px;
+    }
+    
+    .product-card {
+        padding: 1rem;
+    }
+    
+    .product-actions {
+        flex-wrap: wrap;
+    }
+}
+</style>
 {% endblock %}

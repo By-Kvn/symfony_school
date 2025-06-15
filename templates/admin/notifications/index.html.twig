@@ -2,29 +2,445 @@
 
 {% block title %}Notifications Admin{% endblock %}
 
-{% block body %}
-<h1>Notifications du royaume</h1>
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset et base */
+        .notifications-dashboard {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-<table>
-    <thead>
-        <tr>
-            <th>Utilisateur</th>
-            <th>Message</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for notification in notifications %}
-            <tr>
-                <td>{{ notification.user.nom ~ ' ' ~ notification.user.prenom }}</td>
-                <td>{{ notification.label }}</td>
-                <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="3">Aucune notification trouvée.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        .notifications-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Hero Section avec animation */
+        .hero-notifications {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .gradient-bg-notifications {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            opacity: 0.1;
+            border-radius: 24px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .notifications-title {
+            position: relative;
+            z-index: 2;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .notifications-title:before {
+            content: '🔔 ';
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-right: 10px;
+        }
+
+        .notifications-subtitle {
+            position: relative;
+            z-index: 2;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        /* Stats badges */
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            color: #4ecdc4;
+            margin-right: 8px;
+        }
+
+        /* Table moderne avec glassmorphism */
+        .table-notifications-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .table-notifications-container:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.05), rgba(78, 205, 196, 0.05), rgba(69, 183, 209, 0.05));
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .table-notifications {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 15px;
+            background: transparent !important;
+            position: relative;
+            z-index: 2;
+        }
+
+        .table-notifications thead th {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+            padding: 20px 20px;
+            border: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .table-notifications thead th:first-child {
+            border-radius: 15px 0 0 15px;
+        }
+
+        .table-notifications thead th:first-child:before {
+            content: '👤 ';
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        .table-notifications thead th:nth-child(2):before {
+            content: '💬 ';
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        .table-notifications thead th:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        .table-notifications thead th:last-child:before {
+            content: '📅 ';
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        .table-notifications tbody tr {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .table-notifications tbody tr:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-notifications tbody tr:hover:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #4ecdc4, #45b7d1);
+            border-radius: 15px 0 0 15px;
+        }
+
+        .table-notifications tbody td {
+            padding: 20px 20px;
+            border: none;
+            color: white;
+            font-weight: 500;
+            vertical-align: middle;
+            position: relative;
+        }
+
+        .table-notifications tbody td:first-child {
+            border-radius: 15px 0 0 15px;
+            font-weight: 600;
+        }
+
+        .table-notifications tbody td:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        /* Styling spécifique aux colonnes */
+        .user-name {
+            color: #4ecdc4;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-name:before {
+            content: '👨‍💼 ';
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+
+        .notification-message {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            line-height: 1.4;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .notification-message:before {
+            content: '💬 ';
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+
+        .notification-date {
+            color: #feca57;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(254, 202, 87, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(254, 202, 87, 0.2);
+            display: inline-block;
+        }
+
+        .notification-date:before {
+            content: '🕐 ';
+            margin-right: 6px;
+        }
+
+        /* Empty state moderne */
+        .empty-state-notifications {
+            text-align: center;
+            padding: 80px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .empty-state-notifications:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.05), rgba(78, 205, 196, 0.05));
+            animation: gradientShift 10s ease infinite;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            opacity: 0.6;
+            position: relative;
+            z-index: 2;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .empty-title {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .empty-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Animations et effets */
+        .notification-row {
+            animation: slideInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .notification-row:nth-child(1) { animation-delay: 0.1s; }
+        .notification-row:nth-child(2) { animation-delay: 0.2s; }
+        .notification-row:nth-child(3) { animation-delay: 0.3s; }
+        .notification-row:nth-child(4) { animation-delay: 0.4s; }
+        .notification-row:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .notifications-title {
+                font-size: 2rem;
+            }
+            
+            .table-notifications-container {
+                padding: 20px;
+            }
+            
+            .table-notifications tbody td {
+                padding: 15px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .notification-message {
+                max-width: 200px;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .hero-notifications {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .table-notifications thead th,
+            .table-notifications tbody td {
+                padding: 12px 8px;
+            }
+            
+            .notification-date {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="notifications-dashboard">
+    <div class="notifications-container">
+        <!-- Hero Section -->
+        <div class="hero-notifications">
+            <div class="gradient-bg-notifications"></div>
+            <h1 class="notifications-title">Notifications</h1>
+            <p class="notifications-subtitle">Centre de gestion des notifications système</p>
+            
+            <div class="stats-container">
+                <div class="stat-badge">
+                    <span class="stat-number">{{ notifications|length }}</span>
+                    <span>Total</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-number">🔥</span>
+                    <span>En temps réel</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table des notifications -->
+        <div class="table-notifications-container">
+            <table class="table-notifications">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notification in notifications %}
+                        <tr class="notification-row">
+                            <td>
+                                <span class="user-name">{{ notification.user.nom ~ ' ' ~ notification.user.prenom }}</span>
+                            </td>
+                            <td>
+                                <span class="notification-message">{{ notification.label }}</span>
+                            </td>
+                            <td>
+                                <span class="notification-date">{{ notification.createdAt|date('d/m/Y H:i') }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3">
+                                <div class="empty-state-notifications">
+                                    <div class="empty-icon">🔔</div>
+                                    <h2 class="empty-title">Aucune notification trouvée</h2>
+                                    <p class="empty-subtitle">Les nouvelles notifications apparaîtront ici en temps réel</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
