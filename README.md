@@ -1,3 +1,4 @@
+launch via : symfony server:start
 # 🛡️ Projet Symfony – Gestion Produits & Utilisateurs
 
 Ce projet est une application web développée avec **Symfony 6**, permettant :
