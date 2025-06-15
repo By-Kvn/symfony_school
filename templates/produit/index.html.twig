@@ -55,6 +55,19 @@
                         <button class="btn btn-danger btn-sm">delete</button>
                     </form>
                 {% endif %}
+                {# ✅ Bouton "Acheter" visible uniquement pour les utilisateurs connectés ET ayant le rôle USER #}
+{% if is_granted('ROLE_USER') %}
+{% if user and user.points >= produit.prix %}
+    <form method="post" action="{{ path('app_produit_acheter', {'id': produit.id}) }}" style="display:inline-block;">
+        <input type="hidden" name="_token" value="{{ csrf_token('acheter' ~ produit.id) }}">
+        <button type="submit" class="btn btn-warning btn-sm">Acheter</button>
+    </form>
+{% else %}
+    <button class="btn btn-secondary btn-sm" disabled>Pas assez de points</button>
+{% endif %}
+
+{% endif %}
+
             </td>
         </tr>
     {% else %}
