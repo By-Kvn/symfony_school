@@ -23,6 +23,8 @@ class NotificationService
         $notification = new Notification();
         $notification->setLabel($label);
         $notification->setUser($user);
+        $notification->setCreatedAt(new \DateTimeImmutable());
+        $notification->setUpdatedAt(new \DateTimeImmutable());
         $this->em->persist($notification);
     }
 
