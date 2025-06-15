@@ -40,7 +40,9 @@
 
     <a href="{{ path('app_produit_index') }}">back to list</a>
 
-    <a href="{{ path('app_produit_edit', {'id': produit.id}) }}">edit</a>
+    {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}">edit</a>
+    {% endif %}
 
     {{ include('produit/_delete_form.html.twig') }}
 {# <pre>

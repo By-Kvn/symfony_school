@@ -1,103 +1,116 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Produit index{% endblock %}
+{% block title %}Gestion des Produits{% endblock %}
 
 {% block body %}
-{% if user %}
-    <p>Bonjour {{ user.prenom ~ ' ' ~ user.nom }} ({{ user.email }})</p>
-    <p>Rôles :
-    {% for role in user.roles %}
-        <span class="badge bg-info text-dark">{{ role }}</span>
-    {% endfor %}
-    </p>
-{% if user.points is not null %}
-    <p>Points : <span class="badge bg-success">{{ user.points }}</span></p>
-{% else %}
-    <p>Points : <span class="badge bg-secondary">Non défini</span></p>
-{% endif %}
-    {% if is_granted('ROLE_ADMIN') %}
-    <a href="{{ path('app_admin_dashboard') }}" class="btn btn-dark mb-3">🎯 Accéder au tableau de bord admin</a>
-        <a href="{{ path('admin_notifications_index') }}" class="btn btn-outline-primary mb-3">🔔 Voir les notifications</a>
+<div class="container my-5">
 
-{% endif %}
-
-    </p>
-    <form method="post" action="{{ path('app_logout') }}" style="display:inline;">
-        <button type="submit" class="btn btn-secondary">Se déconnecter</button>
-    </form>
-{% else %}
-    <p>Utilisateur non connecté</p>
-    <a href="{{ path('app_login') }}" class="btn btn-primary">Se connecter</a>
-    <a href="{{ path('user_create') }}" class="btn btn-success">Créer un compte</a>
-{% endif %}
-
-<h1>{{ 'produit.titre'|trans }}</h1>
-
-{% if app.user and not app.user.actif %}
-    <div class="alert alert-warning">
-        ⚠️ Votre compte est désactivé. Vous ne pouvez pas acheter de produits.
-    </div>
-{% endif %}
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Nom</th>
-            <th>Prix</th>
-            <th>Category</th>
-            <th>Description</th>
-            <th>CreatedAt</th>
-            <th>UpdatedAt</th>
-            <th>actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for produit in produits %}
-        <tr>
-            <td>{{ produit.id }}</td>
-            <td>{{ produit.nom }}</td>
-            <td>{{ produit.prix }}</td>
-            <td>{{ produit.category }}</td>
-            <td>{{ produit.description }}</td>
-            <td>{{ produit.createdAt ? produit.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-            <td>{{ produit.updatedAt ? produit.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
-            <td>
-                <a href="{{ path('app_produit_show', {'id': produit.id}) }}">show</a>
-
-                {# ✅ Boutons visibles uniquement pour les admins #}
-                {% if is_granted('ROLE_ADMIN') %}
-                    <a href="{{ path('app_produit_edit', {'id': produit.id}) }}">edit</a>
-                    <form method="post" action="{{ path('app_produit_delete', {'id': produit.id}) }}" style="display:inline-block;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.id) }}">
-                        <button class="btn btn-danger btn-sm">delete</button>
-                    </form>
+    {% if user %}
+        <div class="alert alert-light border shadow-sm p-4 mb-4">
+            <h5 class="mb-2">Bonjour <strong>{{ user.prenom ~ ' ' ~ user.nom }}</strong></h5>
+            <p class="mb-1 text-muted">Email : {{ user.email }}</p>
+            <p class="mb-2">
+                Rôles :
+                {% for role in user.roles %}
+                    <span class="badge bg-info text-dark">{{ role }}</span>
+                {% endfor %}
+            </p>
+            <p>Points :
+                {% if user.points is not null %}
+                    <span class="badge bg-success">{{ user.points }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">Non défini</span>
                 {% endif %}
-                {# ✅ Bouton "Acheter" visible uniquement pour les utilisateurs connectés ET ayant le rôle USER #}
-{% if is_granted('ROLE_USER') %}
-{% if user and user.points >= produit.prix %}
-    <form method="post" action="{{ path('app_produit_acheter', {'id': produit.id}) }}" style="display:inline-block;">
-        <input type="hidden" name="_token" value="{{ csrf_token('acheter' ~ produit.id) }}">
-        <button type="submit" class="btn btn-warning btn-sm">Acheter</button>
-    </form>
-{% else %}
-    <button class="btn btn-secondary btn-sm" disabled>Pas assez de points</button>
-{% endif %}
+            </p>
 
-{% endif %}
+            {% if is_granted('ROLE_ADMIN') %}
+                <div class="mt-3">
+                    <a href="{{ path('app_admin_dashboard') }}" class="btn btn-dark me-2">🎯 Tableau de bord admin</a>
+                    <a href="{{ path('admin_notifications_index') }}" class="btn btn-outline-primary me-2">🔔 Notifications</a>
+                </div>
+            {% endif %}
 
-            </td>
-        </tr>
+            <form method="post" action="{{ path('app_logout') }}" class="d-inline mt-2">
+                <button type="submit" class="btn btn-outline-secondary mt-2">Se déconnecter</button>
+            </form>
+        </div>
     {% else %}
-        <tr>
-            <td colspan="8">no records found</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        <div class="alert alert-warning">
+            Utilisateur non connecté
+            <div class="mt-2">
+                <a href="{{ path('app_login') }}" class="btn btn-primary me-2">Se connecter</a>
+                <a href="{{ path('user_create') }}" class="btn btn-success">Créer un compte</a>
+            </div>
+        </div>
+    {% endif %}
 
-{# ✅ Lien de création visible uniquement pour les admins #}
-{% if is_granted('ROLE_ADMIN') %}
-    <a href="{{ path('app_produit_new') }}" class="btn btn-success">Create new</a>
-{% endif %}
+    <h1 class="mb-4">{{ 'produit.titre'|trans }}</h1>
+
+    {% if app.user and not app.user.actif %}
+        <div class="alert alert-warning">
+            ⚠️ Votre compte est désactivé. Vous ne pouvez pas acheter de produits.
+        </div>
+    {% endif %}
+
+    <table class="table table-striped table-bordered shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Nom</th>
+                <th>Prix</th>
+                <th>Catégorie</th>
+                <th>Description</th>
+                <th>Créé le</th>
+                <th>Mis à jour</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for produit in produits %}
+            <tr>
+                <td>{{ produit.id }}</td>
+                <td>{{ produit.nom }}</td>
+                <td>{{ produit.prix }}</td>
+                <td>{{ produit.category }}</td>
+                <td>{{ produit.description }}</td>
+                <td>{{ produit.createdAt ? produit.createdAt|date('d/m/Y H:i') : '' }}</td>
+                <td>{{ produit.updatedAt ? produit.updatedAt|date('d/m/Y H:i') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_produit_show', {'id': produit.id}) }}" class="btn btn-sm btn-outline-info">Voir</a>
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('app_produit_edit', {'id': produit.id}) }}" class="btn btn-sm btn-outline-warning">Modifier</a>
+
+                        <form method="post" action="{{ path('app_produit_delete', {'id': produit.id}) }}"
+                              style="display:inline-block;"
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ produit.id) }}">
+                            <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                        </form>
+                    {% endif %}
+
+                    {% if is_granted('ROLE_USER') %}
+                        {% if user and user.points >= produit.prix %}
+                            <form method="post" action="{{ path('app_produit_acheter', {'id': produit.id}) }}" style="display:inline-block;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('acheter' ~ produit.id) }}">
+                                <button type="submit" class="btn btn-sm btn-success">Acheter</button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-sm btn-secondary" disabled>Pas assez de points</button>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8" class="text-center">Aucun produit trouvé</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('app_produit_new') }}" class="btn btn-success mt-4">➕ Ajouter un produit</a>
+    {% endif %}
+</div>
 {% endblock %}
