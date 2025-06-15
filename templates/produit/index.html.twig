@@ -10,6 +10,16 @@
         <span class="badge bg-info text-dark">{{ role }}</span>
     {% endfor %}
     </p>
+{% if user.points is not null %}
+    <p>Points : <span class="badge bg-success">{{ user.points }}</span></p>
+{% else %}
+    <p>Points : <span class="badge bg-secondary">Non défini</span></p>
+{% endif %}
+    {% if is_granted('ROLE_ADMIN') %}
+    <a href="{{ path('app_admin_dashboard') }}" class="btn btn-dark mb-3">🎯 Accéder au tableau de bord admin</a>
+{% endif %}
+
+    </p>
     <form method="post" action="{{ path('app_logout') }}" style="display:inline;">
         <button type="submit" class="btn btn-secondary">Se déconnecter</button>
     </form>

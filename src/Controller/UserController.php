@@ -4,12 +4,17 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\UserType;
+use App\Repository\UserRepository;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 class UserController extends AbstractController
 {
@@ -22,7 +27,6 @@ class UserController extends AbstractController
         $user = new User();
 
         $form = $this->createForm(UserType::class, $user);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -42,30 +46,67 @@ class UserController extends AbstractController
 
             $this->addFlash('success', 'Utilisateur créé avec succès !');
 
-            return $this->redirectToRoute('app_produit_index'); 
+            return $this->redirectToRoute('app_produit_index');
         }
 
         return $this->render('user/create.html.twig', [
             'form' => $form->createView(),
         ]);
     }
+
     #[Route('/profil/edit', name: 'app_user_edit')]
-public function edit(Request $request, EntityManagerInterface $em): Response
-{
-    $user = $this->getUser();
+    public function edit(Request $request, EntityManagerInterface $em): Response
+    {
+        $user = $this->getUser();
 
-    $form = $this->createForm(UserType::class, $user);
-    $form->handleRequest($request);
+        $form = $this->createForm(UserType::class, $user);
+        $form->handleRequest($request);
 
-    if ($form->isSubmitted() && $form->isValid()) {
-        $em->flush();
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
 
-        $this->addFlash('success', 'Profil mis à jour avec succès.');
-        return $this->redirectToRoute('app_produit_index');
+            $this->addFlash('success', 'Profil mis à jour avec succès.');
+            return $this->redirectToRoute('app_produit_index');
+        }
+
+        return $this->render('user/edit.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
 
-    return $this->render('user/edit.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
+    #[Route('/admin/utilisateur/supprimer/{id}', name: 'app_admin_supprimer_user', methods: ['POST'])]
+    public function supprimerUser(
+        int $id,
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em,
+        CsrfTokenManagerInterface $csrfTokenManager,
+        NotificationService $notificationService
+    ): RedirectResponse {
+            $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            $this->addFlash('error', 'Utilisateur non trouvé.');
+            return $this->redirectToRoute('app_admin_dashboard');
+        }
+
+        $submittedToken = $request->request->get('_token');
+        if (!$csrfTokenManager->isTokenValid(new CsrfToken('delete' . $user->getId(), $submittedToken))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $email = $user->getEmail();
+        $em->remove($user);
+        $em->flush();
+
+        $admin = $this->getUser();
+        $label = sprintf("Suppression de l'utilisateur %s le %s", $email, (new \DateTime())->format('d/m/Y H:i'));
+        $notificationService->create($label, $admin);
+
+        $this->addFlash('success', 'Utilisateur supprimé avec succès.');
+
+        return $this->redirectToRoute('app_admin_dashboard');
+    }
 }
