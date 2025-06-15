@@ -42,11 +42,30 @@ class UserController extends AbstractController
 
             $this->addFlash('success', 'Utilisateur créé avec succès !');
 
-            return $this->redirectToRoute('user_create'); // Ou autre route
+            return $this->redirectToRoute('app_produit_index'); 
         }
 
         return $this->render('user/create.html.twig', [
             'form' => $form->createView(),
         ]);
     }
+    #[Route('/profil/edit', name: 'app_user_edit')]
+public function edit(Request $request, EntityManagerInterface $em): Response
+{
+    $user = $this->getUser();
+
+    $form = $this->createForm(UserType::class, $user);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $em->flush();
+
+        $this->addFlash('success', 'Profil mis à jour avec succès.');
+        return $this->redirectToRoute('app_produit_index');
+    }
+
+    return $this->render('user/edit.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
 }
