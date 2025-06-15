@@ -1,0 +1,5 @@
+produit:
+  titre: "Liste des produits"
+  acheter: "Acheter"
+  pas_assez_points: "Pas assez de points"
+  creer_nouveau: "Créer un nouveau produit"

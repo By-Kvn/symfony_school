@@ -17,6 +17,8 @@
 {% endif %}
     {% if is_granted('ROLE_ADMIN') %}
     <a href="{{ path('app_admin_dashboard') }}" class="btn btn-dark mb-3">🎯 Accéder au tableau de bord admin</a>
+        <a href="{{ path('admin_notifications_index') }}" class="btn btn-outline-primary mb-3">🔔 Voir les notifications</a>
+
 {% endif %}
 
     </p>
@@ -29,7 +31,13 @@
     <a href="{{ path('user_create') }}" class="btn btn-success">Créer un compte</a>
 {% endif %}
 
-<h1>Liste des produits</h1>
+<h1>{{ 'produit.titre'|trans }}</h1>
+
+{% if app.user and not app.user.actif %}
+    <div class="alert alert-warning">
+        ⚠️ Votre compte est désactivé. Vous ne pouvez pas acheter de produits.
+    </div>
+{% endif %}
 
 <table class="table">
     <thead>

@@ -32,3 +32,6 @@ security:
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/admin/notifications, roles: ROLE_ADMIN }
+        - { path: ^/produits, roles: ROLE_USER }
+

@@ -1,9 +1,13 @@
+<a href="{{ path('app_produit_index') }}" class="btn btn-secondary mb-3">
+    ← Retour à la liste des produits
+</a>
 <h1>Tableau de bord Admin</h1>
 
-{# Ton formulaire magique pour ajouter les points #}
+{# Formulaire pour ajouter les points à tous les utilisateurs actifs #}
 <form action="{{ path('app_admin_ajouter_points') }}" method="post" onsubmit="return confirm('Ajouter 1000 points à tous les utilisateurs actifs ?')">
     <button type="submit">Ajouter 1000 points à tous les users actifs</button>
 </form>
+
 {% for message in app.flashes('success') %}
     <div class="alert alert-success">{{ message }}</div>
 {% endfor %}
@@ -11,6 +15,7 @@
 {% for message in app.flashes('error') %}
     <div class="alert alert-danger">{{ message }}</div>
 {% endfor %}
+
 <table class="table">
     <thead>
         <tr>
@@ -19,6 +24,7 @@
             <th>Roles</th>
             <th>Points</th>
             <th>Actions</th>
+            <th>Actif</th>
         </tr>
     </thead>
     <tbody>
@@ -34,16 +40,26 @@
                     <button type="submit" class="btn btn-primary btn-sm">Ajouter 1000 points</button>
                 </form>
 
+                {# Bouton pour activer/désactiver l'utilisateur #}
+                <form action="{{ path('admin_user_toggle_actif', {'id': user.id}) }}" method="post" style="display:inline-block;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('toggle_actif' ~ user.id) }}">
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        {{ user.actif ? 'Désactiver' : 'Activer' }}
+                    </button>
+                </form>
+
                 {# Bouton pour supprimer l'utilisateur #}
                 <form action="{{ path('app_admin_supprimer_user', {'id': user.id}) }}" method="post" style="display:inline-block;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
                     <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                 </form>
             </td>
+            <td>{{ user.actif ? 'Oui' : 'Non' }}</td>
         </tr>
     {% else %}
         <tr>
-            <td colspan="5">Aucun utilisateur trouvé.</td>
+            <td colspan="6">Aucun utilisateur trouvé.</td>
         </tr>
     {% endfor %}
     </tbody>
+</table>

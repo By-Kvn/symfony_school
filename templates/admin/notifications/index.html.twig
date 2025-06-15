@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Notifications Admin{% endblock %}
+
+{% block body %}
+<h1>Notifications du royaume</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Utilisateur</th>
+            <th>Message</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for notification in notifications %}
+            <tr>
+                <td>{{ notification.user.nom ~ ' ' ~ notification.user.prenom }}</td>
+                <td>{{ notification.label }}</td>
+                <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">Aucune notification trouvée.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

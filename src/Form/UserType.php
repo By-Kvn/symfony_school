@@ -13,26 +13,33 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class UserType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
-    {
-        $builder
-            ->add('email', EmailType::class)
-            ->add('nom', TextType::class)
-            ->add('prenom', TextType::class)
-            ->add('actif', CheckboxType::class, [
-                'required' => false,
-                'label' => 'Actif'
-            ])
-            ->add('plainPassword', PasswordType::class, [
-                'mapped' => false,
-                'label' => 'Mot de passe'
-            ]);
-    }
+public function buildForm(FormBuilderInterface $builder, array $options)
+{
+    $builder
+        ->add('email', EmailType::class)
+        ->add('nom', TextType::class)
+        ->add('prenom', TextType::class);
 
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        $resolver->setDefaults([
-            'data_class' => User::class,
+    if ($options['is_admin']) {
+        $builder->add('actif', CheckboxType::class, [
+            'required' => false,
+            'label' => 'Actif'
         ]);
     }
+
+    $builder->add('plainPassword', PasswordType::class, [
+        'mapped' => false,
+        'label' => 'Mot de passe'
+    ]);
+}
+
+
+public function configureOptions(OptionsResolver $resolver)
+{
+    $resolver->setDefaults([
+        'data_class' => User::class,
+        'is_admin' => false,
+    ]);
+}
+
 }

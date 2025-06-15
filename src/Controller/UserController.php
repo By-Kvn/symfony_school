@@ -15,6 +15,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class UserController extends AbstractController
 {
@@ -42,6 +43,7 @@ class UserController extends AbstractController
             $user->setUpdatedAt(new \DateTimeImmutable());
 
             $em->persist($user);
+            $user->setActif(true);
             $em->flush();
 
             $this->addFlash('success', 'Utilisateur créé avec succès !');
@@ -109,4 +111,15 @@ class UserController extends AbstractController
 
         return $this->redirectToRoute('app_admin_dashboard');
     }
+    #[Route('/admin/user/{id}/toggle-actif', name: 'admin_user_toggle_actif', methods: ['POST'])]
+#[IsGranted('ROLE_ADMIN')]
+public function toggleActif(User $user, EntityManagerInterface $em): RedirectResponse
+{
+    $user->setActif(!$user->isActif());
+    $em->flush();
+
+    $this->addFlash('success', 'Le statut de l\'utilisateur a été mis à jour.');
+    return $this->redirectToRoute('app_admin_dashboard'); // ta liste des users
+}
+
 }
